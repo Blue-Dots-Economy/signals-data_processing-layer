@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c ' *)",
+      "Bash(pip install *)",
+      "Bash(tasklist /fi \"imagename eq python.exe\" /fo csv)",
+      "Bash(python3 -c \"import sys; line = sys.stdin.readline\\(\\); cols = line.strip\\(\\).split\\(','\\); print\\('Columns:', cols[:15]\\)\")"
+    ]
+  }
+}

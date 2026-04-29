@@ -1,0 +1,121 @@
+{
+  "type": "excalidraw",
+  "version": 2,
+  "source": "https://excalidraw.com",
+  "elements": [
+    {"type":"text","id":"ttl","x":560,"y":10,"width":600,"height":36,"text":"Blue Dots Data Pipeline \u2014 V2","fontSize":30,"fontFamily":1,"textAlign":"left","verticalAlign":"top","strokeColor":"#1e1e1e","backgroundColor":"transparent","fillStyle":"solid","strokeWidth":2,"roughness":1,"opacity":100},
+
+    {"type":"rectangle","id":"pg_zone","x":50,"y":55,"width":820,"height":205,"backgroundColor":"#ffd8a8","fillStyle":"solid","roundness":{"type":3},"strokeColor":"#f59e0b","strokeWidth":2,"opacity":40},
+    {"type":"text","id":"pg_lbl","x":68,"y":65,"width":780,"height":22,"text":"External PostgreSQL Databases  (KA + UP)","fontSize":18,"fontFamily":1,"textAlign":"left","verticalAlign":"top","strokeColor":"#92400e","backgroundColor":"transparent","fillStyle":"solid","strokeWidth":2,"roughness":1,"opacity":100},
+    {"type":"text","id":"pg_sub","x":68,"y":90,"width":780,"height":18,"text":"Credentials: GCP Secret Manager (Cloud Run)  /  db_credentials.json (local)","fontSize":14,"fontFamily":1,"textAlign":"left","verticalAlign":"top","strokeColor":"#92400e","backgroundColor":"transparent","fillStyle":"solid","strokeWidth":2,"roughness":1,"opacity":100},
+
+    {"type":"rectangle","id":"ka_sk_db","x":62,"y":112,"width":183,"height":132,"backgroundColor":"#ffd8a8","fillStyle":"solid","roundness":{"type":3},"strokeColor":"#f59e0b","strokeWidth":2,"opacity":100},
+    {"type":"text","id":"ka_sk_db_lbl","x":62,"y":112,"width":183,"height":132,"text":"KA Seeker DB\nport 5433\nprofile, user\nmember, org","fontSize":14,"fontFamily":1,"textAlign":"center","verticalAlign":"middle","strokeColor":"#1e1e1e","backgroundColor":"transparent","fillStyle":"solid","strokeWidth":2,"roughness":1,"opacity":100},
+
+    {"type":"rectangle","id":"ka_pr_db","x":260,"y":112,"width":183,"height":132,"backgroundColor":"#ffd8a8","fillStyle":"solid","roundness":{"type":3},"strokeColor":"#f59e0b","strokeWidth":2,"opacity":100},
+    {"type":"text","id":"ka_pr_db_lbl","x":260,"y":112,"width":183,"height":132,"text":"KA Provider DB\nport 5432\njob_posting, job_app\nmember, org, user","fontSize":14,"fontFamily":1,"textAlign":"center","verticalAlign":"middle","strokeColor":"#1e1e1e","backgroundColor":"transparent","fillStyle":"solid","strokeWidth":2,"roughness":1,"opacity":100},
+
+    {"type":"rectangle","id":"up_sk_db","x":458,"y":112,"width":183,"height":132,"backgroundColor":"#ffd8a8","fillStyle":"solid","roundness":{"type":3},"strokeColor":"#f59e0b","strokeWidth":2,"opacity":100},
+    {"type":"text","id":"up_sk_db_lbl","x":458,"y":112,"width":183,"height":132,"text":"UP Seeker DB\nport 5433\nprofile, user\nmember, org","fontSize":14,"fontFamily":1,"textAlign":"center","verticalAlign":"middle","strokeColor":"#1e1e1e","backgroundColor":"transparent","fillStyle":"solid","strokeWidth":2,"roughness":1,"opacity":100},
+
+    {"type":"rectangle","id":"up_pr_db","x":656,"y":112,"width":183,"height":132,"backgroundColor":"#ffd8a8","fillStyle":"solid","roundness":{"type":3},"strokeColor":"#f59e0b","strokeWidth":2,"opacity":100},
+    {"type":"text","id":"up_pr_db_lbl","x":656,"y":112,"width":183,"height":132,"text":"UP Provider DB\nport 5432\njob_posting, job_app\nmember, org, user","fontSize":14,"fontFamily":1,"textAlign":"center","verticalAlign":"middle","strokeColor":"#1e1e1e","backgroundColor":"transparent","fillStyle":"solid","strokeWidth":2,"roughness":1,"opacity":100},
+
+    {"type":"rectangle","id":"gcs_in","x":890,"y":55,"width":560,"height":205,"backgroundColor":"#c3fae8","fillStyle":"solid","roundness":{"type":3},"strokeColor":"#22c55e","strokeWidth":2,"opacity":40},
+    {"type":"text","id":"gcs_in_lbl","x":908,"y":65,"width":524,"height":22,"text":"Google Cloud Storage  \u2014  gs://blue-dots-pipeline","fontSize":18,"fontFamily":1,"textAlign":"left","verticalAlign":"top","strokeColor":"#15803d","backgroundColor":"transparent","fillStyle":"solid","strokeWidth":2,"roughness":1,"opacity":100},
+
+    {"type":"rectangle","id":"lkup_in","x":905,"y":100,"width":200,"height":148,"backgroundColor":"#fff3bf","fillStyle":"solid","roundness":{"type":3},"strokeColor":"#f59e0b","strokeWidth":1,"opacity":100},
+    {"type":"text","id":"lkup_in_lbl","x":905,"y":100,"width":200,"height":148,"text":"lookup_cache/\n(LLM + role cache)\nsynced down\nat startup","fontSize":14,"fontFamily":1,"textAlign":"center","verticalAlign":"middle","strokeColor":"#1e1e1e","backgroundColor":"transparent","fillStyle":"solid","strokeWidth":2,"roughness":1,"opacity":100},
+
+    {"type":"rectangle","id":"secret_mgr","x":1120,"y":100,"width":315,"height":148,"backgroundColor":"#eebefa","fillStyle":"solid","roundness":{"type":3},"strokeColor":"#8b5cf6","strokeWidth":2,"opacity":100},
+    {"type":"text","id":"secret_mgr_lbl","x":1120,"y":100,"width":315,"height":148,"text":"GCP Secret Manager\nprojects/blue-dots-project\n/secrets/DB_CREDENTIALS\n(DB host, user, password\nfor all 4 databases)","fontSize":14,"fontFamily":1,"textAlign":"center","verticalAlign":"middle","strokeColor":"#1e1e1e","backgroundColor":"transparent","fillStyle":"solid","strokeWidth":2,"roughness":1,"opacity":100},
+
+    {"type":"arrow","id":"pg_arrow","x":460,"y":261,"width":0,"height":68,"points":[[0,0],[0,68]],"strokeColor":"#f59e0b","strokeWidth":3,"endArrowhead":"arrow","roughness":1,"opacity":100},
+    {"type":"text","id":"pg_arrow_lbl","x":472,"y":278,"width":140,"height":20,"text":"psycopg2 queries","fontSize":14,"fontFamily":1,"textAlign":"left","verticalAlign":"middle","strokeColor":"#92400e","backgroundColor":"transparent","fillStyle":"solid","strokeWidth":2,"roughness":1,"opacity":100},
+
+    {"type":"arrow","id":"gcs_sync_dn","x":1005,"y":261,"width":0,"height":40,"points":[[0,0],[0,40]],"strokeColor":"#4a9eed","strokeWidth":3,"endArrowhead":"arrow","roughness":1,"opacity":100},
+    {"type":"text","id":"gcs_sync_dn_lbl","x":1017,"y":272,"width":220,"height":20,"text":"sync_down lookup_cache/","fontSize":14,"fontFamily":1,"textAlign":"left","verticalAlign":"middle","strokeColor":"#2563eb","backgroundColor":"transparent","fillStyle":"solid","strokeWidth":2,"roughness":1,"opacity":100},
+
+    {"type":"rectangle","id":"cr_bg","x":50,"y":301,"width":1400,"height":808,"backgroundColor":"#e5dbff","fillStyle":"solid","roundness":{"type":3},"strokeColor":"#8b5cf6","strokeWidth":2,"opacity":40},
+    {"type":"text","id":"cr_lbl1","x":68,"y":311,"width":650,"height":28,"text":"Cloud Run Job  \u2014  entrypoint.py","fontSize":21,"fontFamily":1,"textAlign":"left","verticalAlign":"top","strokeColor":"#6d28d9","backgroundColor":"transparent","fillStyle":"solid","strokeWidth":2,"roughness":1,"opacity":100},
+
+    {"type":"rectangle","id":"step0","x":72,"y":343,"width":1356,"height":85,"backgroundColor":"#ffd8a8","fillStyle":"solid","roundness":{"type":3},"strokeColor":"#f59e0b","strokeWidth":2,"opacity":100},
+    {"type":"text","id":"step0_lbl","x":72,"y":363,"width":1356,"height":45,"text":"DB Extraction  \u2014  db_extract.py  |  Fetch all 4 datasets from PostgreSQL via psycopg2  |  Writes raw CSVs to raw_data/  |  Credentials via GCP Secret Manager (Cloud Run) or db_credentials.json (local)","fontSize":16,"fontFamily":1,"textAlign":"center","verticalAlign":"middle","strokeColor":"#1e1e1e","backgroundColor":"transparent","fillStyle":"solid","strokeWidth":2,"roughness":1,"opacity":100},
+
+    {"type":"arrow","id":"a01","x":750,"y":428,"width":0,"height":18,"points":[[0,0],[0,18]],"strokeColor":"#6d28d9","strokeWidth":2,"endArrowhead":"arrow","roughness":1,"opacity":100},
+    {"type":"text","id":"cr_lbl2","x":68,"y":448,"width":600,"height":22,"text":"run_pipeline.py  \u2014  6 steps in sequence:","fontSize":17,"fontFamily":1,"textAlign":"left","verticalAlign":"top","strokeColor":"#7c3aed","backgroundColor":"transparent","fillStyle":"solid","strokeWidth":2,"roughness":1,"opacity":100},
+
+    {"type":"rectangle","id":"s1","x":72,"y":472,"width":1356,"height":85,"backgroundColor":"#d0bfff","fillStyle":"solid","roundness":{"type":3},"strokeColor":"#8b5cf6","strokeWidth":2,"opacity":100},
+    {"type":"text","id":"s1_lbl","x":72,"y":502,"width":1356,"height":25,"text":"Step 1: Normalisation  \u2014  normalisation.py  |  Parse metadata JSON blob, flatten all nested fields to columns, clean strings / phones / booleans","fontSize":16,"fontFamily":1,"textAlign":"center","verticalAlign":"middle","strokeColor":"#1e1e1e","backgroundColor":"transparent","fillStyle":"solid","strokeWidth":2,"roughness":1,"opacity":100},
+
+    {"type":"arrow","id":"a12","x":750,"y":557,"width":0,"height":22,"points":[[0,0],[0,22]],"strokeColor":"#6d28d9","strokeWidth":2,"endArrowhead":"arrow","roughness":1,"opacity":100},
+
+    {"type":"rectangle","id":"s2","x":72,"y":579,"width":1356,"height":85,"backgroundColor":"#d0bfff","fillStyle":"solid","roundness":{"type":3},"strokeColor":"#8b5cf6","strokeWidth":2,"opacity":100},
+    {"type":"text","id":"s2_lbl","x":72,"y":609,"width":1356,"height":25,"text":"Step 2: LLM Location Enrichment  \u2014  llm_location_enrichment.py  |  Predict location_state + location_district via Claude Haiku (async, batches of 100); cache in lookup_cache/","fontSize":16,"fontFamily":1,"textAlign":"center","verticalAlign":"middle","strokeColor":"#1e1e1e","backgroundColor":"transparent","fillStyle":"solid","strokeWidth":2,"roughness":1,"opacity":100},
+
+    {"type":"arrow","id":"a23","x":750,"y":664,"width":0,"height":22,"points":[[0,0],[0,22]],"strokeColor":"#6d28d9","strokeWidth":2,"endArrowhead":"arrow","roughness":1,"opacity":100},
+
+    {"type":"rectangle","id":"s3","x":72,"y":686,"width":1356,"height":85,"backgroundColor":"#d0bfff","fillStyle":"solid","roundness":{"type":3},"strokeColor":"#8b5cf6","strokeWidth":2,"opacity":100},
+    {"type":"text","id":"s3_lbl","x":72,"y":709,"width":1356,"height":38,"text":"Step 3: Role Normalisation  \u2014  role_normalisation.py  |  Canonical role + sector + collar type (Blue / Grey / White Collar) + collar equivalents per role column; cached in lookup_cache/","fontSize":16,"fontFamily":1,"textAlign":"center","verticalAlign":"middle","strokeColor":"#1e1e1e","backgroundColor":"transparent","fillStyle":"solid","strokeWidth":2,"roughness":1,"opacity":100},
+
+    {"type":"arrow","id":"a34","x":750,"y":771,"width":0,"height":22,"points":[[0,0],[0,22]],"strokeColor":"#6d28d9","strokeWidth":2,"endArrowhead":"arrow","roughness":1,"opacity":100},
+
+    {"type":"rectangle","id":"s4","x":72,"y":793,"width":1356,"height":85,"backgroundColor":"#d0bfff","fillStyle":"solid","roundness":{"type":3},"strokeColor":"#8b5cf6","strokeWidth":2,"opacity":100},
+    {"type":"text","id":"s4_lbl","x":72,"y":823,"width":1356,"height":25,"text":"Step 4: Test / Spam Flagging  \u2014  flag_test.py  |  Flag test/spam by phone, email, and org name; propagate flags from orgs to members","fontSize":16,"fontFamily":1,"textAlign":"center","verticalAlign":"middle","strokeColor":"#1e1e1e","backgroundColor":"transparent","fillStyle":"solid","strokeWidth":2,"roughness":1,"opacity":100},
+
+    {"type":"arrow","id":"a45","x":750,"y":878,"width":0,"height":22,"points":[[0,0],[0,22]],"strokeColor":"#6d28d9","strokeWidth":2,"endArrowhead":"arrow","roughness":1,"opacity":100},
+
+    {"type":"rectangle","id":"s5","x":72,"y":900,"width":1356,"height":85,"backgroundColor":"#d0bfff","fillStyle":"solid","roundness":{"type":3},"strokeColor":"#8b5cf6","strokeWidth":2,"opacity":100},
+    {"type":"text","id":"s5_lbl","x":72,"y":920,"width":1356,"height":45,"text":"Step 5: Matchmaking  \u2014  matchmaking.py  |  Role 40% (rapidfuzz) + Location 30% + Salary 20% + Education 10%  |  Right Fit: role+loc \u226550%  |  Partial Fit: role \u226550%  |  threshold \u226540%","fontSize":16,"fontFamily":1,"textAlign":"center","verticalAlign":"middle","strokeColor":"#1e1e1e","backgroundColor":"transparent","fillStyle":"solid","strokeWidth":2,"roughness":1,"opacity":100},
+
+    {"type":"arrow","id":"a56","x":750,"y":985,"width":0,"height":22,"points":[[0,0],[0,22]],"strokeColor":"#4a9eed","strokeWidth":2,"endArrowhead":"arrow","roughness":1,"opacity":100},
+
+    {"type":"rectangle","id":"s6","x":72,"y":1007,"width":1356,"height":85,"backgroundColor":"#a5d8ff","fillStyle":"solid","roundness":{"type":3},"strokeColor":"#4a9eed","strokeWidth":2,"opacity":100},
+    {"type":"text","id":"s6_lbl","x":72,"y":1027,"width":1356,"height":45,"text":"Step 6: Populate Dashboard  \u2014  populate_dashboard.py  |  4 separate Google Sheets (KA Provider, KA Seeker, UP Provider, UP Seeker)  |  3 tabs each: OPEN_ROLES, job_application, seeker_profile  |  checkpointing","fontSize":16,"fontFamily":1,"textAlign":"center","verticalAlign":"middle","strokeColor":"#1e1e1e","backgroundColor":"transparent","fillStyle":"solid","strokeWidth":2,"roughness":1,"opacity":100},
+
+    {"type":"arrow","id":"sync_up","x":380,"y":1112,"width":0,"height":65,"points":[[0,0],[0,65]],"strokeColor":"#22c55e","strokeWidth":3,"endArrowhead":"arrow","roughness":1,"opacity":100},
+    {"type":"text","id":"sync_up_lbl","x":394,"y":1134,"width":180,"height":22,"text":"sync_up (GCS)","fontSize":15,"fontFamily":1,"textAlign":"left","verticalAlign":"middle","strokeColor":"#15803d","backgroundColor":"transparent","fillStyle":"solid","strokeWidth":2,"roughness":1,"opacity":100},
+
+    {"type":"arrow","id":"a_gs","x":1250,"y":1112,"width":0,"height":65,"points":[[0,0],[0,65]],"strokeColor":"#4a9eed","strokeWidth":3,"endArrowhead":"arrow","roughness":1,"opacity":100},
+    {"type":"text","id":"a_gs_lbl","x":1264,"y":1134,"width":140,"height":22,"text":"gspread API","fontSize":15,"fontFamily":1,"textAlign":"left","verticalAlign":"middle","strokeColor":"#2563eb","backgroundColor":"transparent","fillStyle":"solid","strokeWidth":2,"roughness":1,"opacity":100},
+
+    {"type":"rectangle","id":"gcs_out","x":50,"y":1180,"width":970,"height":205,"backgroundColor":"#c3fae8","fillStyle":"solid","roundness":{"type":3},"strokeColor":"#22c55e","strokeWidth":2,"opacity":40},
+    {"type":"text","id":"gcs_out_lbl","x":68,"y":1190,"width":680,"height":24,"text":"GCS  \u2014  processed_data/ + lookup_cache/  (Output)","fontSize":18,"fontFamily":1,"textAlign":"left","verticalAlign":"top","strokeColor":"#15803d","backgroundColor":"transparent","fillStyle":"solid","strokeWidth":2,"roughness":1,"opacity":100},
+
+    {"type":"rectangle","id":"o_kask","x":62,"y":1222,"width":175,"height":148,"backgroundColor":"#b2f2bb","fillStyle":"solid","roundness":{"type":3},"strokeColor":"#22c55e","strokeWidth":1,"opacity":100},
+    {"type":"text","id":"o_kask_lbl","x":62,"y":1222,"width":175,"height":148,"text":"ka_seeker/\n4 CSVs\n~25k rows","fontSize":14,"fontFamily":1,"textAlign":"center","verticalAlign":"middle","strokeColor":"#1e1e1e","backgroundColor":"transparent","fillStyle":"solid","strokeWidth":2,"roughness":1,"opacity":100},
+
+    {"type":"rectangle","id":"o_upsk","x":252,"y":1222,"width":175,"height":148,"backgroundColor":"#b2f2bb","fillStyle":"solid","roundness":{"type":3},"strokeColor":"#22c55e","strokeWidth":1,"opacity":100},
+    {"type":"text","id":"o_upsk_lbl","x":252,"y":1222,"width":175,"height":148,"text":"up_seeker/\n4 CSVs\n~16k rows","fontSize":14,"fontFamily":1,"textAlign":"center","verticalAlign":"middle","strokeColor":"#1e1e1e","backgroundColor":"transparent","fillStyle":"solid","strokeWidth":2,"roughness":1,"opacity":100},
+
+    {"type":"rectangle","id":"o_kapr","x":442,"y":1222,"width":175,"height":148,"backgroundColor":"#b2f2bb","fillStyle":"solid","roundness":{"type":3},"strokeColor":"#22c55e","strokeWidth":1,"opacity":100},
+    {"type":"text","id":"o_kapr_lbl","x":442,"y":1222,"width":175,"height":148,"text":"ka_provider/\n5 CSVs\n~12k rows","fontSize":14,"fontFamily":1,"textAlign":"center","verticalAlign":"middle","strokeColor":"#1e1e1e","backgroundColor":"transparent","fillStyle":"solid","strokeWidth":2,"roughness":1,"opacity":100},
+
+    {"type":"rectangle","id":"o_uppr","x":632,"y":1222,"width":175,"height":148,"backgroundColor":"#b2f2bb","fillStyle":"solid","roundness":{"type":3},"strokeColor":"#22c55e","strokeWidth":1,"opacity":100},
+    {"type":"text","id":"o_uppr_lbl","x":632,"y":1222,"width":175,"height":148,"text":"up_provider/\n5 CSVs\n~6k rows","fontSize":14,"fontFamily":1,"textAlign":"center","verticalAlign":"middle","strokeColor":"#1e1e1e","backgroundColor":"transparent","fillStyle":"solid","strokeWidth":2,"roughness":1,"opacity":100},
+
+    {"type":"rectangle","id":"o_match","x":822,"y":1222,"width":183,"height":148,"backgroundColor":"#ffd8a8","fillStyle":"solid","roundness":{"type":3},"strokeColor":"#f59e0b","strokeWidth":1,"opacity":100},
+    {"type":"text","id":"o_match_lbl","x":822,"y":1222,"width":183,"height":148,"text":"matches/\nka_matches.csv\nup_matches.csv","fontSize":14,"fontFamily":1,"textAlign":"center","verticalAlign":"middle","strokeColor":"#1e1e1e","backgroundColor":"transparent","fillStyle":"solid","strokeWidth":2,"roughness":1,"opacity":100},
+
+    {"type":"rectangle","id":"gs_zone","x":1042,"y":1180,"width":408,"height":205,"backgroundColor":"#b2f2bb","fillStyle":"solid","roundness":{"type":3},"strokeColor":"#22c55e","strokeWidth":2,"opacity":40},
+    {"type":"text","id":"gs_zone_lbl","x":1055,"y":1188,"width":382,"height":22,"text":"Google Sheets  (4 separate spreadsheets)","fontSize":16,"fontFamily":1,"textAlign":"center","verticalAlign":"top","strokeColor":"#15803d","backgroundColor":"transparent","fillStyle":"solid","strokeWidth":2,"roughness":1,"opacity":100},
+
+    {"type":"rectangle","id":"gs_ka_prov","x":1052,"y":1214,"width":188,"height":78,"backgroundColor":"#b2f2bb","fillStyle":"solid","roundness":{"type":3},"strokeColor":"#22c55e","strokeWidth":2,"opacity":100},
+    {"type":"text","id":"gs_ka_prov_lbl","x":1052,"y":1214,"width":188,"height":78,"text":"KA Provider\nOPEN_ROLES\njob_application","fontSize":13,"fontFamily":1,"textAlign":"center","verticalAlign":"middle","strokeColor":"#1e1e1e","backgroundColor":"transparent","fillStyle":"solid","strokeWidth":2,"roughness":1,"opacity":100},
+
+    {"type":"rectangle","id":"gs_ka_seek","x":1252,"y":1214,"width":188,"height":78,"backgroundColor":"#b2f2bb","fillStyle":"solid","roundness":{"type":3},"strokeColor":"#22c55e","strokeWidth":2,"opacity":100},
+    {"type":"text","id":"gs_ka_seek_lbl","x":1252,"y":1214,"width":188,"height":78,"text":"KA Seeker\nseeker_profile","fontSize":13,"fontFamily":1,"textAlign":"center","verticalAlign":"middle","strokeColor":"#1e1e1e","backgroundColor":"transparent","fillStyle":"solid","strokeWidth":2,"roughness":1,"opacity":100},
+
+    {"type":"rectangle","id":"gs_up_prov","x":1052,"y":1302,"width":188,"height":78,"backgroundColor":"#b2f2bb","fillStyle":"solid","roundness":{"type":3},"strokeColor":"#22c55e","strokeWidth":2,"opacity":100},
+    {"type":"text","id":"gs_up_prov_lbl","x":1052,"y":1302,"width":188,"height":78,"text":"UP Provider\nOPEN_ROLES\njob_application","fontSize":13,"fontFamily":1,"textAlign":"center","verticalAlign":"middle","strokeColor":"#1e1e1e","backgroundColor":"transparent","fillStyle":"solid","strokeWidth":2,"roughness":1,"opacity":100},
+
+    {"type":"rectangle","id":"gs_up_seek","x":1252,"y":1302,"width":188,"height":78,"backgroundColor":"#b2f2bb","fillStyle":"solid","roundness":{"type":3},"strokeColor":"#22c55e","strokeWidth":2,"opacity":100},
+    {"type":"text","id":"gs_up_seek_lbl","x":1252,"y":1302,"width":188,"height":78,"text":"UP Seeker\nseeker_profile","fontSize":13,"fontFamily":1,"textAlign":"center","verticalAlign":"middle","strokeColor":"#1e1e1e","backgroundColor":"transparent","fillStyle":"solid","strokeWidth":2,"roughness":1,"opacity":100}
+  ],
+  "appState": {
+    "viewBackgroundColor": "#ffffff",
+    "scrollX": 120,
+    "scrollY": 80,
+    "zoom": {"value": 0.45}
+  }
+}

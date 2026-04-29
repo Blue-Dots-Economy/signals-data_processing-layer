@@ -1,0 +1,9 @@
+raw_data/
+processed_data/
+lookup_cache/
+*.xlsx
+.env
+service_account.json
+__pycache__/
+preprocessing/__pycache__/
+.pipeline_state.json
