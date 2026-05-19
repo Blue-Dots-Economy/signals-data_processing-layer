@@ -185,8 +185,8 @@ def parse_gps(metadata_val):
 
 
 def row_from_dict(data: dict, headers: list[str]) -> list:
-    """Build a sheet row in header order; blank for any header not in data."""
-    return [data.get(h, "") for h in headers]
+    """Build a sheet row in header order; None (blank cell) for any header not in data."""
+    return [None if (v := data.get(h, None)) == "" else v for h in headers]
 
 
 # ── Sheet upload ───────────────────────────────────────────────────────────────
@@ -360,7 +360,7 @@ def load_ka_data():
 
 # ── OPEN_ROLES ─────────────────────────────────────────────────────────────────
 
-def build_open_roles(data: dict, headers: list[str]) -> list[list]:
+def build_open_roles(data: dict) -> list[dict]:
     TODAY         = _dt.today().date()
     job_posting   = data["job_posting"]
     user_provider = data["user_provider"]
@@ -420,7 +420,7 @@ def build_open_roles(data: dict, headers: list[str]) -> list[list]:
         salary_str    = fmt_salary(r)
         job_desc      = safe(r.get("job_description"))
         contact_name  = safe(u.get("name"))
-        contact_num   = safe(u.get("phone_number"))
+        contact_num   = clean_phone(u.get("phone_number"))
         contact_email = safe(u.get("email"))
 
         # Application counts
@@ -553,13 +553,13 @@ def build_open_roles(data: dict, headers: list[str]) -> list[list]:
             "normalised_title":                safe(r.get("llm_title_normalized")),
             "normalised_title_sector":         safe(r.get("llm_title_sector")),
         }
-        rows.append(row_from_dict(d, headers))
+        rows.append(d)
     return rows
 
 
 # ── job_application ────────────────────────────────────────────────────────────
 
-def build_job_application(data: dict, headers: list[str]) -> list[list]:
+def build_job_application(data: dict) -> list[dict]:
     job_application = data["job_application"]
     job_posting     = data["job_posting"]
     org_provider    = data["org_provider"]
@@ -667,14 +667,22 @@ def build_job_application(data: dict, headers: list[str]) -> list[list]:
             "title":                 safe(r.get("job_title")),
             "normalised_title":      safe(r.get("llm_job_title_normalized")),
             "normalised_title_sector": safe(r.get("llm_job_title_sector")),
+            "seeker_email":          safe(r.get("seeker_email")),
+            "seeker_age":            safe(r.get("seeker_age")),
+            "seeker_iti_specialization":    safe(r.get("seeker_iti_specialization")),
+            "seeker_highest_qualification": safe(r.get("seeker_highest_qualification")),
+            "llm_location_district": safe(prof.get("llm_location_district")),
+            "llm_location_state":    safe(prof.get("llm_location_state")),
+            "seeker_user_phone":     safe(u_sk.get("phone_number")),
+            "seeker_user_email":     safe(u_sk.get("email")),
         }
-        rows.append(row_from_dict(d, headers))
+        rows.append(d)
     return rows
 
 
 # ── seeker_profile ─────────────────────────────────────────────────────────────
 
-def build_seeker_profile(data: dict, headers: list[str]) -> list[list]:
+def build_seeker_profile(data: dict) -> list[dict]:
     TODAY         = _dt.today().date()
     profile       = data["profile"]
     user_seeker   = data["user_seeker"]
@@ -823,8 +831,10 @@ def build_seeker_profile(data: dict, headers: list[str]) -> list[list]:
             "Status":             status,
             "Partial Fit":        sk_partial.get(uid, 0),
             "Direct Fit":         sk_right.get(uid, 0),
+            "normalised_role":              safe(r.get("llm_role_normalized")),
+            "Job Sector":                   safe(r.get("llm_role_sector")),
         }
-        rows.append(row_from_dict(d, headers))
+        rows.append(d)
     return rows
 
 
@@ -969,11 +979,23 @@ def main(resume: bool = False, only_state: str | None = None, test: bool = False
             headers = raw[0] if raw else []
             while headers and headers[-1] == "":
                 headers.pop()
+
+            row_dicts = build_fn(data)
+
+            # Add any keys present in the data that are missing from the sheet headers
+            existing = set(headers)
+            for d in row_dicts:
+                for k in d:
+                    if k not in existing:
+                        headers.append(k)
+                        existing.add(k)
+                        print(f"  New column added to {tab_name}: {k!r}")
+
             if not headers:
                 print(f"  WARNING: no headers found in {tab_name}, skipping.")
                 continue
 
-            rows = build_fn(data, headers)
+            rows = [row_from_dict(d, headers) for d in row_dicts]
             print(f"  {len(rows):,} rows")
             upload_tab(ws, headers, rows)
 

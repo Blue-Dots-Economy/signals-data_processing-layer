@@ -1,0 +1,10 @@
+1. To switch it to production, run:
+gcloud run jobs update blue-dots-pipeline --region asia-south1 --project blue-dots-project --update-env-vars TEST_MODE=false
+
+2. Run pipeline
+
+cd C:\GitHub\blue-dots-data-pipeline
+docker build -t asia-south1-docker.pkg.dev/blue-dots-project/blue-dots-repo/blue-dots-pipeline:latest .
+docker push asia-south1-docker.pkg.dev/blue-dots-project/blue-dots-repo/blue-dots-pipeline:latest
+gcloud run jobs update blue-dots-pipeline --image asia-south1-docker.pkg.dev/blue-dots-project/blue-dots-repo/blue-dots-pipeline:latest --region asia-south1 --project blue-dots-project
+gcloud run jobs execute blue-dots-pipeline --region asia-south1 --project blue-dots-project --wait

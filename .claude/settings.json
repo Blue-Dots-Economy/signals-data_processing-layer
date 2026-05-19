@@ -4,7 +4,10 @@
       "Bash(python -c ' *)",
       "Bash(pip install *)",
       "Bash(tasklist /fi \"imagename eq python.exe\" /fo csv)",
-      "Bash(python3 -c \"import sys; line = sys.stdin.readline\\(\\); cols = line.strip\\(\\).split\\(','\\); print\\('Columns:', cols[:15]\\)\")"
+      "Bash(python3 -c \"import sys; line = sys.stdin.readline\\(\\); cols = line.strip\\(\\).split\\(','\\); print\\('Columns:', cols[:15]\\)\")",
+      "Bash(git -C /c/GitHub/blue-dots-data-pipeline remote -v)",
+      "Bash(python -c \"import json; print\\('Python None serializes to JSON null:'\\); print\\(json.dumps\\({'value': None}\\)\\)\")",
+      "Read(//c/Users/Palak/AppData/Local/Programs/Python/Python310/lib/site-packages/gspread/**)"
     ]
   }
 }

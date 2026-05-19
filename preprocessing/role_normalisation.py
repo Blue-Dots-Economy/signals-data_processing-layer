@@ -103,6 +103,7 @@ def _normalize_batch(
         "  - Use standard, concise English job titles (e.g. 'CNC Operator', 'Electrician', 'Accountant')\n"
         "  - If multiple roles are listed, pick the primary one\n"
         "  - If the input means the person is open to any role (e.g. 'Any', 'Anything', 'Any job', 'Open'), use \"Any\"\n"
+        "  - If the input is 'ITI Other', 'ITI - Other', or any variation of ITI with 'other/misc/unspecified', use \"ITI Technician\"\n"
         "  - If the input is truly nonsensical or uninterpretable, use null\n"
         "  - Preserve meaningful specialisations (e.g. 'Diesel Mechanic' not just 'Mechanic')\n"
         "  - Use Title Case\n"
@@ -327,6 +328,8 @@ def main() -> None:
                 continue
             df = pd.read_csv(path, low_memory=False)
             df = _apply_lookup(df, source_cols, lookup)
+            if csv_name == "profile_clean.csv" and "llm_role_normalized" in df.columns:
+                df["normalised_role"] = df["llm_role_normalized"]
             df.to_csv(path, index=False)
             print(f"  Saved -> {path}")
 

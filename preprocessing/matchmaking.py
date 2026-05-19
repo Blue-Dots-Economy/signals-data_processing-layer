@@ -27,22 +27,24 @@ Usage:
 import argparse
 import itertools
 import sys
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 from rapidfuzz import fuzz
 
-BASE_DIR      = Path(__file__).parent.parent   # repo root (preprocessing/../)
+BASE_DIR      = Path(__file__).parent.parent
 PROCESSED_DIR = BASE_DIR / "processed_data"
 MATCHES_DIR   = PROCESSED_DIR / "matches"
 
-CONFIDENCE_THRESHOLD = 0.40   # minimum weighted confidence to emit a row
-ROLE_MIN_SCORE       = 0.30   # pre-filter: skip pairs below this before full scoring
-ROLE_MATCH_THRESHOLD = 0.50   # minimum role score to count as a "role match"
-LOC_MATCH_THRESHOLD  = 0.50   # minimum location score to count as a "location match"
+CONFIDENCE_THRESHOLD = 0.40
+ROLE_MIN_SCORE       = 0.30
+ROLE_MATCH_THRESHOLD = 0.50
+LOC_MATCH_THRESHOLD  = 0.50
 
 WEIGHTS = {"role": 0.40, "location": 0.30, "salary": 0.20, "education": 0.10}
+W_ARR   = np.array([WEIGHTS["role"], WEIGHTS["location"], WEIGHTS["salary"], WEIGHTS["education"]])
 
 EDU_HIERARCHY = {
     "8th pass": 1, "8th": 1,
@@ -68,20 +70,9 @@ def safe(val) -> str:
     return str(val).strip()
 
 
-def to_float(val):
-    s = safe(val)
-    if not s:
-        return None
-    try:
-        return float(s)
-    except ValueError:
-        return None
-
-
 # ── Role scoring ───────────────────────────────────────────────────────────────
 
 def _single_role_score(a: str, b: str) -> float:
-    """Fuzzy token-set ratio between two role strings, normalised to 0–1."""
     if not a or not b:
         return 0.0
     if a.lower() == b.lower():
@@ -90,10 +81,6 @@ def _single_role_score(a: str, b: str) -> float:
 
 
 def role_score_for_pair(sk_iti_str: str, pr_role: str) -> tuple[float, str]:
-    """
-    Seeker may have pipe-separated trades (e.g. 'Fitter|Electrician').
-    Return (max_score, best_matching_trade).
-    """
     trades = [t.strip() for t in sk_iti_str.split("|") if t.strip()]
     if not trades:
         return 0.0, ""
@@ -114,76 +101,57 @@ def build_role_matrix(sk_iti_values: list[str], pr_roles: list[str]) -> pd.DataF
     return pd.DataFrame(records, columns=["sk_iti_str", "pr_role", "role_score", "best_trade"])
 
 
-# ── Location scoring ───────────────────────────────────────────────────────────
-
-def _loc_score(sk_state: str, sk_dist: str, pr_state: str, pr_dist: str):
-    """
-    Returns float 0–1, or np.nan if provider has no location (neutral).
-    District match = 1.0 | State match only = 0.6 | No match = 0.0
-    """
-    p_state = pr_state.lower()
-    s_state = sk_state.lower()
-    if not p_state:
-        return np.nan   # provider didn't specify — neutral
-    if not s_state:
-        return np.nan   # seeker has no location — neutral
-    if p_state not in s_state and s_state not in p_state:
-        return 0.0
-    p_dist = pr_dist.lower()
-    s_dist = sk_dist.lower()
-    if not p_dist or not s_dist:
-        return 0.6      # state matches, no district info
-    if p_dist in s_dist or s_dist in p_dist:
-        return 1.0
-    return 0.6
-
+# ── Location scoring (vectorized) ─────────────────────────────────────────────
 
 def vec_loc_score(df: pd.DataFrame) -> pd.Series:
-    return df.apply(
-        lambda r: _loc_score(
-            safe(r["sk_location_state"]), safe(r["sk_location_district"]),
-            safe(r["pr_location_state"]),  safe(r["pr_location_district"]),
-        ),
-        axis=1,
-    )
+    ss  = df["sk_location_state"].fillna("").str.strip().str.lower().values
+    ps  = df["pr_location_state"].fillna("").str.strip().str.lower().values
+    sd  = df["sk_location_district"].fillna("").str.strip().str.lower().values
+    pd_ = df["pr_location_district"].fillna("").str.strip().str.lower().values
+
+    out = np.full(len(ss), np.nan)
+    for i in range(len(ss)):
+        if not ps[i] or not ss[i]:
+            continue
+        if ps[i] not in ss[i] and ss[i] not in ps[i]:
+            out[i] = 0.0
+            continue
+        if not pd_[i] or not sd[i]:
+            out[i] = 0.6
+        elif pd_[i] in sd[i] or sd[i] in pd_[i]:
+            out[i] = 1.0
+        else:
+            out[i] = 0.6
+    return pd.Series(out, index=df.index)
 
 
-# ── Salary scoring ─────────────────────────────────────────────────────────────
-
-def _sal_score(sk_sal, pr_min, pr_max):
-    """
-    Returns float 0–1, or np.nan if either side is missing (neutral).
-    Within range = 1.0 | Within 20% of range = 0.5 | Outside = 0.0
-    """
-    if sk_sal is None or (pr_min is None and pr_max is None):
-        return np.nan
-    lo = pr_min if pr_min is not None else pr_max * 0.8
-    hi = pr_max if pr_max is not None else pr_min * 1.2
-    if lo > hi:
-        lo, hi = hi, lo
-    if lo <= sk_sal <= hi:
-        return 1.0
-    buf = max((hi - lo) * 0.2, 2000)
-    if (lo - buf) <= sk_sal <= (hi + buf):
-        return 0.5
-    return 0.0
-
+# ── Salary scoring (vectorized) ────────────────────────────────────────────────
 
 def vec_sal_score(df: pd.DataFrame) -> pd.Series:
-    return df.apply(
-        lambda r: _sal_score(
-            to_float(r["monthly_in_hand_preferred"]),
-            to_float(r["min_monthly_in_hand"]),
-            to_float(r["max_monthly_in_hand"]),
-        ),
-        axis=1,
-    )
+    sk = pd.to_numeric(df["monthly_in_hand_preferred"], errors="coerce").values
+    mn = pd.to_numeric(df["min_monthly_in_hand"],       errors="coerce").values
+    mx = pd.to_numeric(df["max_monthly_in_hand"],       errors="coerce").values
+
+    lo = np.where(~np.isnan(mn), mn, mx * 0.8)
+    hi = np.where(~np.isnan(mx), mx, mn * 1.2)
+    lo, hi = np.minimum(lo, hi), np.maximum(lo, hi)
+    buf = np.maximum((hi - lo) * 0.2, 2000)
+
+    neutral   = np.isnan(sk) | (np.isnan(mn) & np.isnan(mx))
+    in_range  = ~neutral & (sk >= lo) & (sk <= hi)
+    in_buffer = ~neutral & ~in_range & (sk >= lo - buf) & (sk <= hi + buf)
+    no_match  = ~neutral & ~in_range & ~in_buffer
+
+    result = np.full(len(sk), np.nan)
+    result[in_range]  = 1.0
+    result[in_buffer] = 0.5
+    result[no_match]  = 0.0
+    return pd.Series(result, index=df.index)
 
 
-# ── Education scoring ──────────────────────────────────────────────────────────
+# ── Education scoring (vectorized) ─────────────────────────────────────────────
 
 def _edu_level(qual_str: str):
-    """Return highest education level int from a pipe-separated qualification string."""
     if not qual_str:
         return None
     levels = []
@@ -199,48 +167,34 @@ def _edu_level(qual_str: str):
     return max(levels) if levels else None
 
 
-def _edu_score(sk_qual: str, pr_min_edu: str):
-    """
-    Returns float 0–1, or np.nan if either side is missing (neutral).
-    Meets/exceeds = 1.0 | One level below = 0.5 | Further below = 0.0
-    """
-    if not pr_min_edu:
-        return np.nan
-    s_lv = _edu_level(sk_qual)
-    p_lv = _edu_level(pr_min_edu)
-    if s_lv is None or p_lv is None:
-        return np.nan
-    diff = s_lv - p_lv
-    if diff >= 0:
-        return 1.0
-    if diff == -1:
-        return 0.5
-    return 0.0
-
-
 def vec_edu_score(df: pd.DataFrame) -> pd.Series:
-    return df.apply(
-        lambda r: _edu_score(safe(r["highest_qualification"]), safe(r["min_education_level"])),
-        axis=1,
-    )
+    sk_quals = df["highest_qualification"].fillna("").apply(safe)
+    pr_edus  = df["min_education_level"].fillna("").apply(safe)
+
+    sk_map = {v: _edu_level(v) for v in sk_quals.unique()}
+    pr_map = {v: _edu_level(v) for v in pr_edus.unique()}
+
+    sk_lv = sk_quals.map(sk_map).to_numpy(dtype=float)
+    pr_lv = pr_edus.map(pr_map).to_numpy(dtype=float)
+
+    neutral = np.isnan(sk_lv) | np.isnan(pr_lv)
+    diff    = sk_lv - pr_lv
+
+    result = np.full(len(sk_lv), np.nan)
+    result[~neutral & (diff >= 0)]  = 1.0
+    result[~neutral & (diff == -1)] = 0.5
+    result[~neutral & (diff < -1)]  = 0.0
+    return pd.Series(result, index=df.index)
 
 
-# ── Confidence ─────────────────────────────────────────────────────────────────
+# ── Confidence (vectorized) ────────────────────────────────────────────────────
 
 def vec_confidence(df: pd.DataFrame) -> pd.Series:
-    """Weighted average of available (non-NaN) score columns."""
-    cols = {"role_score": "role", "location_score": "location",
-            "salary_score": "salary", "education_score": "education"}
-    result = []
-    for _, r in df.iterrows():
-        total_w, wsum = 0.0, 0.0
-        for col, key in cols.items():
-            v = r[col]
-            if not (v != v):  # not NaN
-                w = WEIGHTS[key]
-                wsum  += v * w
-                total_w += w
-        result.append(wsum / total_w if total_w > 0 else 0.0)
+    scores = df[["role_score", "location_score", "salary_score", "education_score"]].to_numpy(dtype=float)
+    mask   = ~np.isnan(scores)
+    wsum   = np.where(mask, scores * W_ARR, 0.0).sum(axis=1)
+    total  = np.where(mask, W_ARR, 0.0).sum(axis=1)
+    result = np.where(total > 0, wsum / total, 0.0)
     return pd.Series(result, index=df.index)
 
 
@@ -277,31 +231,12 @@ def match_dataset(provider_dir: Path, seeker_dir: Path, state: str) -> pd.DataFr
 
     print(f"[{state}] {len(open_jobs)} open jobs | {len(seekers)} seekers")
 
-    # ── Lookup tables ─────────────────────────────────────────────────────────
-    user_sk_lkp = (
-        user_seeker.drop_duplicates("id")
-        .set_index("id")[["phone_number", "email"]]
-        .to_dict("index")
-    )
-    member_org_lkp = (
-        member_seeker.dropna(subset=["user_id"])
-        .groupby("user_id")["organization_id"].first()
-        .to_dict()
-    )
-    org_sk_lkp = org_seeker.drop_duplicates("id").set_index("id")["name"].to_dict()
-    user_pr_lkp = (
-        user_provider.drop_duplicates("id")
-        .set_index("id")[["name", "phone_number", "email"]]
-        .to_dict("index")
-    )
-
     # ── Seeker role field (iti_specialization → role) ────────────────────────
     seekers["sk_iti_str"] = seekers["iti_specialization"].apply(safe)
     seekers.loc[seekers["sk_iti_str"] == "", "sk_iti_str"] = seekers.loc[
         seekers["sk_iti_str"] == "", "role"
     ].apply(safe)
 
-    # Provider role: llm_title_normalized -> llm_job_title_normalized -> job_title -> title -> role (fallback chain)
     def _pr_role(r):
         return (safe(r.get("llm_title_normalized"))
                 or safe(r.get("llm_job_title_normalized"))
@@ -353,7 +288,6 @@ def match_dataset(provider_dir: Path, seeker_dir: Path, state: str) -> pd.DataFr
     if merged.empty:
         return pd.DataFrame()
 
-    # Rename location cols for clarity
     merged.rename(columns={
         "llm_location_state_sk":    "sk_location_state",
         "llm_location_district_sk": "sk_location_district",
@@ -388,28 +322,44 @@ def match_dataset(provider_dir: Path, seeker_dir: Path, state: str) -> pd.DataFr
           f"({(merged['match_category']=='Right Fit').sum():,} Right Fit  |  "
           f"{(merged['match_category']=='Partial Fit').sum():,} Partial Fit)")
 
-    # ── Enrich with lookup data ───────────────────────────────────────────────
-    def enrich(r):
-        uid    = safe(r.get("user_id"))
-        cb     = safe(r.get("created_by"))
-        org_id = safe(member_org_lkp.get(uid, ""))
-        u_sk   = user_sk_lkp.get(uid, {})
-        u_pr   = user_pr_lkp.get(cb, {})
-        return pd.Series({
-            "seeker_email":           safe(u_sk.get("email")),
-            "seeker_org_id":          org_id,
-            "seeker_org_name":        safe(org_sk_lkp.get(org_id, "")),
-            "provider_contact_name":  safe(u_pr.get("name")),
-            "provider_contact_phone": safe(u_pr.get("phone_number")),
-            "provider_contact_email": safe(u_pr.get("email")),
+    # ── Enrich with lookup data (joins instead of row-by-row apply) ───────────
+    seeker_emails = (
+        user_seeker.drop_duplicates("id")[["id", "email"]]
+        .rename(columns={"id": "user_id", "email": "seeker_email"})
+    )
+    # seeker org: user_id → member_seeker → org_seeker
+    # use _sk_org_id to avoid conflict with provider's organization_id column
+    member_org = (
+        member_seeker.dropna(subset=["user_id"])
+        .groupby("user_id")["organization_id"].first()
+        .reset_index()
+        .rename(columns={"organization_id": "_sk_org_id"})
+    )
+    org_names = (
+        org_seeker.drop_duplicates("id")[["id", "name"]]
+        .rename(columns={"id": "_sk_org_id", "name": "seeker_org_name"})
+    )
+    provider_contacts = (
+        user_provider.drop_duplicates("id")[["id", "name", "phone_number", "email"]]
+        .rename(columns={
+            "id":           "created_by",
+            "name":         "provider_contact_name",
+            "phone_number": "provider_contact_phone",
+            "email":        "provider_contact_email",
         })
+    )
 
-    extra = merged.apply(enrich, axis=1)
-    merged = pd.concat([merged, extra], axis=1)
+    merged = (
+        merged
+        .merge(seeker_emails,     on="user_id",    how="left")
+        .merge(member_org,        on="user_id",    how="left")
+        .merge(org_names,         on="_sk_org_id", how="left")
+        .merge(provider_contacts, on="created_by", how="left")
+    )
 
     # ── Build final output DataFrame ──────────────────────────────────────────
     def pct(v):
-        return round(v * 100, 1) if (v == v) else "N/A"   # NaN → N/A
+        return round(v * 100, 1) if (v == v) else "N/A"
 
     out = pd.DataFrame({
         # ── IDs & classification ──────────────────────────────────────────
@@ -425,7 +375,7 @@ def match_dataset(provider_dir: Path, seeker_dir: Path, state: str) -> pd.DataFr
         "salary_match_%":          merged["salary_score"].apply(pct),
         "education_match_%":       merged["education_score"].apply(pct),
 
-        # ── Job role (which role this pairing corresponds to) ─────────────
+        # ── Job role ──────────────────────────────────────────────────────
         "job_role":                merged["role_pr"].apply(safe),
         "job_title":               merged["title"].apply(safe) if "title" in merged.columns else "",
         "job_normalised_title":    merged["pr_role"].apply(safe),
@@ -433,7 +383,7 @@ def match_dataset(provider_dir: Path, seeker_dir: Path, state: str) -> pd.DataFr
         # ── Seeker profile ────────────────────────────────────────────────
         "seeker_name":             merged["name"].apply(safe),
         "seeker_phone":            merged["phone"].apply(safe),
-        "seeker_email":            merged["seeker_email"],
+        "seeker_email":            merged["seeker_email"].apply(safe),
         "seeker_matched_trade":    merged["best_trade"],
         "seeker_iti_full":         merged["iti_specialization"].apply(safe) if "iti_specialization" in merged.columns else "",
         "seeker_role":             merged["role_sk"].apply(safe),
@@ -441,8 +391,8 @@ def match_dataset(provider_dir: Path, seeker_dir: Path, state: str) -> pd.DataFr
         "seeker_location_state":   merged["sk_location_state"].apply(safe),
         "seeker_expected_salary":  merged["monthly_in_hand_preferred"].apply(safe),
         "seeker_qualification":    merged["highest_qualification"].apply(safe),
-        "seeker_org_id":           merged["seeker_org_id"],
-        "seeker_org_name":         merged["seeker_org_name"],
+        "seeker_org_id":           merged["_sk_org_id"].apply(safe),
+        "seeker_org_name":         merged["seeker_org_name"].apply(safe),
 
         # ── Provider / job details ────────────────────────────────────────
         "provider_org_name":       merged["organization_name"].apply(safe),
@@ -453,9 +403,9 @@ def match_dataset(provider_dir: Path, seeker_dir: Path, state: str) -> pd.DataFr
         "job_salary_max":          merged["max_monthly_in_hand"].apply(safe) if "max_monthly_in_hand" in merged.columns else "",
         "job_min_education":       merged["min_education_level"].apply(safe) if "min_education_level" in merged.columns else "",
         "job_openings":            merged["positions"].apply(safe) if "positions" in merged.columns else "",
-        "provider_contact_name":   merged["provider_contact_name"],
-        "provider_contact_phone":  merged["provider_contact_phone"],
-        "provider_contact_email":  merged["provider_contact_email"],
+        "provider_contact_name":   merged["provider_contact_name"].apply(safe),
+        "provider_contact_phone":  merged["provider_contact_phone"].apply(safe),
+        "provider_contact_email":  merged["provider_contact_email"].apply(safe),
     })
 
     out.sort_values("confidence_score_%", ascending=False, inplace=True)
@@ -474,8 +424,16 @@ def main(only_state: str | None = None):
     if only_state:
         datasets = [(s, p, k) for s, p, k in datasets if s == only_state]
 
+    if len(datasets) > 1:
+        with ThreadPoolExecutor(max_workers=2) as ex:
+            futures = {ex.submit(match_dataset, p, k, s): s for s, p, k in datasets}
+            results = {futures[f]: f.result() for f in futures}
+    else:
+        s, p, k = datasets[0]
+        results = {s: match_dataset(p, k, s)}
+
     for state, provider_dir, seeker_dir in datasets:
-        df = match_dataset(provider_dir, seeker_dir, state)
+        df = results[state]
         out_path = MATCHES_DIR / f"{state.lower()}_matches.csv"
         df.to_csv(out_path, index=False, encoding="utf-8-sig")
         print(f"[{state}] Written to {out_path}  ({len(df):,} rows)")
