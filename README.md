@@ -8,12 +8,12 @@ The pipeline runs as a **Google Cloud Run Job** and executes the following steps
 
 | Step | Script | Description |
 |------|--------|-------------|
-| 1 | `normalisation.py` | Clean and flatten raw CSVs: standardise phone numbers, parse JSON fields, unify salary fields by job nature (stipend / task rate / monthly), extract job role from multiple schema variants |
-| 2 | `llm_location_enrichment.py` | Predict `location_state` and `location_district` from free-text using Claude API |
-| 3 | `role_normalisation.py` | Map free-text job titles to canonical roles using Claude API |
-| 4 | `flag_test.py` | Rule-based test/spam detection: flags records by phone pattern, email domain (e.g. `dhiway.com`, `ekstepplus.org`), plus-addressing, and org name keywords |
-| 5 | `matchmaking.py` | Weighted rule-based matching (role 40%, location 30%, salary 20%, education 10%) using fuzzy role scoring; outputs `High / Medium / Low` confidence labels |
-| 6 | `populate_dashboard.py` | Computes profile completion scores (seeker: 13 fields, provider: 8 fields), formats output, and uploads to Google Sheets dashboard |
+| 1 | `normalisation.py` | Flattens nested JSON metadata (`whoIAm / whatIHave / whatIWant`) into flat columns; standardises phone numbers to `+91XXXXXXXXXX`; classifies `nature_of_job` (internship / gig / regular) to pick the correct salary fields (`stipendMin/Max`, `taskRateMin/Max`, or `minMonthlyInHand/maxMonthlyInHand`); extracts job role from multiple schema variants (`role`, `jobRole`, `job_role`, `title`, `jobTitle`) |
+| 2 | `llm_location_enrichment.py` | Predicts `location_state` and `location_district` from free-text location using Claude API |
+| 3 | `role_normalisation.py` | Maps free-text job titles to canonical roles and sectors using Claude API |
+| 4 | `flag_test.py` | Rule-based spam/test detection: flags by invalid phone patterns, known test phone numbers, internal email domains (`dhiway.com`, `ekstepplus.org`), plus-addressing (`+test`, `+demo`), org name keywords (`test`, `demo`, `xyz`, `ekstep`, `dhiway`); cascades org flags to linked members and job postings |
+| 5 | `matchmaking.py` | Weighted rule-based seeker-to-job matching: role fit via fuzzy token scoring (40%), location match (30%), salary compatibility (20%), education level hierarchy (10%); outputs `High / Medium / Low` confidence labels with per-dimension scores |
+| 6 | `populate_dashboard.py` | Computes **provider profile completion** (8 fields) and **seeker profile completion** (13 fields); derives **job status** (`New / Active / At Risk / Satisfied / Inactive`) from job age, application counts, and resolution rates; detects **duplicate postings** by matching 7 key fields; calculates **application age metrics** (job age, last application date, pending days, shortlisted/rejected age); generates **recommended actions** and **follow-up flags** for missing profile fields; uploads all data to Google Sheets |
 
 ## Tech Stack
 
