@@ -15,6 +15,9 @@ build/
 # Pipeline state
 .pipeline_state.json
 
+# Local notes
+notes.txt
+
 # OS
 .DS_Store
 Thumbs.db
