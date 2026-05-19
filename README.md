@@ -8,12 +8,12 @@ The pipeline runs as a **Google Cloud Run Job** and executes the following steps
 
 | Step | Script | Description |
 |------|--------|-------------|
-| 1 | `normalisation.py` | Clean and flatten raw CSVs from PostgreSQL |
-| 2 | `llm_location_enrichment.py` | Predict state/district from free-text location |
+| 1 | `normalisation.py` | Clean and flatten raw CSVs: standardise phone numbers, parse JSON fields, unify salary fields by job nature (stipend / task rate / monthly), extract job role from multiple schema variants |
+| 2 | `llm_location_enrichment.py` | Predict `location_state` and `location_district` from free-text using Claude API |
 | 3 | `role_normalisation.py` | Map free-text job titles to canonical roles using Claude API |
-| 4 | `flag_test.py` | Flag test/spam records |
-| 5 | `matchmaking.py` | Match seekers to open job postings |
-| 6 | `populate_dashboard.py` | Upload processed data to Google Sheets dashboard |
+| 4 | `flag_test.py` | Rule-based test/spam detection: flags records by phone pattern, email domain (e.g. `dhiway.com`, `ekstepplus.org`), plus-addressing, and org name keywords |
+| 5 | `matchmaking.py` | Weighted rule-based matching (role 40%, location 30%, salary 20%, education 10%) using fuzzy role scoring; outputs `High / Medium / Low` confidence labels |
+| 6 | `populate_dashboard.py` | Computes profile completion scores (seeker: 13 fields, provider: 8 fields), formats output, and uploads to Google Sheets dashboard |
 
 ## Tech Stack
 
